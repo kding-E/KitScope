@@ -1,0 +1,46 @@
+dataset_url: "synthetic data bundled in data/smoke"
+split: synthetic_smoke
+seed: 42
+fpr_budget: 0.03
+url_weights: splits/url_group_weights.csv
+url_weight_stage: evaluation
+rounding_decimals: 2
+
+methods:
+  KitScope-CR:
+    representation: "425"
+    prediction_file: predictions/random/main_425/evaluation_predictions.csv
+    threshold: 0.50
+    expected:
+      n: 10
+      positives: 5
+      benign: 5
+      tp: 5
+      fp: 1
+      tn: 4
+      fn: 0
+      f1_pct: 90.91
+      fpr_pct: 20.00
+      r_at_3_pct: 100.00
+      ap_pct: 100.00
+      u_f1_pct: 95.24
+      u_fpr_pct: 12.50
+
+  KitScope-EV:
+    representation: "228"
+    prediction_file: predictions/random/main_228/evaluation_predictions.csv
+    threshold: 0.75
+    expected:
+      n: 10
+      positives: 5
+      benign: 5
+      tp: 3
+      fp: 0
+      tn: 5
+      fn: 2
+      f1_pct: 75.00
+      fpr_pct: 0.00
+      r_at_3_pct: 100.00
+      ap_pct: 100.00
+      u_f1_pct: 75.00
+      u_fpr_pct: 0.00

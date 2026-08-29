@@ -1,0 +1,46 @@
+dataset_url: "https://t3.znas.cn/rxHtGmUHCgg"
+split: random_zip_legacy_compatible
+seed: 42
+fpr_budget: 0.03
+url_weights: splits/url_group_weights.csv
+url_weight_stage: evaluation
+rounding_decimals: 2
+
+methods:
+  KitScope-CR:
+    representation: "425"
+    prediction_file: predictions/random/main_425/evaluation_predictions.csv
+    threshold: 0.9230816364288331
+    expected:
+      n: 6510
+      positives: 3619
+      benign: 2891
+      tp: 3277
+      fp: 84
+      tn: 2807
+      fn: 342
+      f1_pct: 93.90
+      fpr_pct: 2.91
+      r_at_3_pct: 90.77
+      ap_pct: 98.99
+      u_f1_pct: 95.20
+      u_fpr_pct: 2.97
+
+  KitScope-EV:
+    representation: "228"
+    prediction_file: predictions/random/main_228/evaluation_predictions.csv
+    threshold: 0.9182037711143495
+    expected:
+      n: 6510
+      positives: 3619
+      benign: 2891
+      tp: 3143
+      fp: 95
+      tn: 2796
+      fn: 476
+      f1_pct: 91.67
+      fpr_pct: 3.29
+      r_at_3_pct: 85.77
+      ap_pct: 98.48
+      u_f1_pct: 93.46
+      u_fpr_pct: 3.64

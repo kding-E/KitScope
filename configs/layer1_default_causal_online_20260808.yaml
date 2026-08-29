@@ -1,0 +1,109 @@
+# Canonical Layer-1 deployment route frozen on 2026-08-08.
+# Every decision is prefix-causal: no completed-session rank, labelled visit
+# boundary, future candidate, or future window may affect an earlier alert.
+route_id: causal_multidelay_five_window_dynamic_rank8_balanced_dann_hybrid
+seed: 42
+
+input_contract:
+  replay: packet_timestamp_order
+  traffic_only: true
+  presegmented_session_input: false
+  future_session_information: false
+
+candidate_generation:
+  scan_step_s: 0.5
+  decision_delays_s: [0.75, 1.5, 2.5, 3.5]
+  merge_within_s: 2.0
+  semantics: >-
+    Each delay is an independent causal view of the same local onset. Views
+    within 2 seconds are merged after the longest delay has become available.
+
+windows:
+  names: [adaptive, w2, w4, w7, w10]
+  availability: causal_window_close
+
+onset_ranker:
+  target: candidate_hit_within_3s
+  fit_score_semantics: session_level_oof
+  deployment_score_semantics: frozen_candidate_local_model
+  admission: dynamic_top8_so_far
+  max_active_candidates: 8
+  complete_session_rank_allowed: false
+  diversity_gap_s: 0.0
+
+classifier:
+  base_model: lightgbm
+  representation_presets:
+    "425": kit_l1_core_transport_invariant_stackclean
+    "228": kit_l1_core_shape_only
+  training_rows: five_causal_windows_for_candidates_ever_admitted_to_dynamic_top8
+  sample_weighting: session_normalized_balanced
+  fitdev_refit: true
+
+representation_ensemble:
+  enabled: true
+  model: balanced_kit_dann
+  feature_input: same_layer1_candidate_window_features_as_lightgbm
+  kit_supervision: training_only_backend_kit_family
+  era_supervision: training_only_manifest_capture_date
+  balance_kit_loss: true
+  balance_era_within_label: true
+  blend_mode: positive_lift
+  formula: lightgbm + weight * max(kit_dann - lightgbm, 0)
+  weight_grid: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0]
+  epoch_and_weight_selection: fit_dev_only
+  selection_metric: plain_f1
+  final_refit: complete_outer_fit
+  evaluation_labels_used: false
+  zero_weight_semantics: architecture_retained_no_harm_fallback
+
+# CSW is outside the default detector. It is a fixed paired diagnostic only
+# for environment/time drift and cannot replace the headline route.
+drift_csw_control:
+  part_of_default_route: false
+  report_role: additional_paired_drift_diagnostic
+  enabled_settings: [matched_environment, time_forward_single_environment]
+  estimator: row_fullfit_corrected
+  weighting_unit: row
+  probability_estimation: full_fit
+  prior_mode: corrected
+  row_support_mode: detector_candidate_protocol
+  fit_row_scope: detector_training
+  imputation_mode: native
+  domain_reg_lambda: 0.0
+  weight_strength: 1.0
+  clip_low: 0.25
+  clip_high: 4.0
+  target_covariates: unlabeled_only
+  evaluation_labels_used_for_selection: false
+  refinement_allowed: false
+  promotion_rule: never_replace_headline_without_new_fit_only_preregistration
+
+aggregation:
+  candidate_score: maximum_available_window_score
+  normal_alert_score: mean_of_top2_distinct_candidate_scores
+  normal_minimum_distinct_candidates: 2
+
+calibration:
+  method: split_conformal
+  unit: benign_session_maximum
+  alpha: 0.03
+  evaluation_labels_used: false
+
+single_candidate_override:
+  enabled: true
+  method: benign_calibration_session_maximum_upper_tail
+  target_fpr: 0.002
+  applies_only_when_selected_candidates: 1
+
+continuous_state:
+  reset: traffic_visible_site_open
+  alert_session_visibility: endpoint
+  sni_or_host_boundary_status: retired_from_default_after_paired_counterfactual
+  onset_diversity_gap_s: 0.0
+  idle_gap_presegmentation: false
+  rolling_episode_presegmentation: false
+
+ablation_exemptions:
+  - e6_candidate_1
+  - e6_fixed_whole_episode

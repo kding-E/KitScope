@@ -1,0 +1,198 @@
+# Post-load-guard ablation variant of the oracle_plus offline config:
+# identical except anchor.post_load_guard_mode: none.
+# Offline training/evaluation variant of the universal interactive phishing
+# Layer-1 gateway config.  It keeps the deployable traffic-only candidate route
+# but emits oracle and jitter windows for supervised offline experiments.
+
+anchor:
+  mode: oracle_plus_heuristic
+  prepad_s: 0.10
+  jitter_offsets_s: [-1.0, -0.5, 0.5, 1.0]
+  # Ablation: disable the post-load guard entirely (candidate scan may
+  # start during page load).  Compare against the instrumentation baseline.
+  post_load_guard_mode: none
+
+candidate:
+  # 2026-08-08 causal Layer-1 default: frozen before evaluation.
+  scan_step_s: 0.50
+  decision_delays_s: [0.75, 1.5, 2.5, 3.5]
+  past_quiet_window_s: 4.0
+  min_after_capture_start_s: 0.5
+  min_after_post_load_s: 0.0
+  min_after_first_party_s: 1.5
+  max_scan_s: 240.0
+  top_k: 14
+  merge_within_s: 2.0
+  min_score: 0.85
+  min_total_bytes_3s: 900
+  min_important_bytes_3s: 900
+  min_trigger_bytes_3s: 600
+  important_roles:
+    - unknown
+    - first_party_site
+    - third_party_backend_or_other
+    - identity_provider
+    - captcha_challenge
+    - payment_provider
+    - messaging_api
+    - form_backend
+    - cloud_api
+    - object_storage
+    - email_delivery
+    - file_storage
+    - url_shortener
+    - hosting_platform
+    - rpc_provider
+    - walletconnect
+  backend_roles:
+    - first_party_site
+    - third_party_backend_or_other
+    - identity_provider
+    - payment_provider
+    - messaging_api
+    - form_backend
+    - cloud_api
+    - object_storage
+    - email_delivery
+    - file_storage
+    - hosting_platform
+    - rpc_provider
+    - walletconnect
+  trigger_roles:
+    - first_party_site
+    - third_party_backend_or_other
+    - identity_provider
+    - captcha_challenge
+    - payment_provider
+    - messaging_api
+    - form_backend
+    - cloud_api
+    - object_storage
+    - email_delivery
+    - file_storage
+    - hosting_platform
+    - rpc_provider
+    - walletconnect
+    - wallet_vendor
+  negative_roles:
+    - analytics_ads
+    - third_party_static
+    - software_update
+  fallback_if_empty: true
+  static_frac_penalty_threshold: 0.40
+  wallet_vendor_only_frac_threshold: 0.70
+  shape_pre_window_s: 6.0
+  shape_burst_gap_s: 0.30
+  min_shape_salience: 0.16
+  role_aux_cap: 0.18
+  w_shape_salience: 1.35
+  w_shape_top3: 0.75
+  w_shape_change: 0.70
+  w_shape_intrinsic: 0.60
+  w_shape_multiflow: 0.50
+  w_burst: 0.28
+  w_backend: 0.12
+  w_quiet: 0.04
+  w_new_flow: 0.03
+  w_new_host: 0.02
+  w_stable_nochange: 0.35
+
+filtering:
+  role_source: sni_dns
+  include_unknown_packets: true
+  include_tcp: true
+  include_udp443: true
+  feature_mode: clean
+  suppress_roles:
+    - wallet_vendor
+  suppress_host_patterns:
+    - '(^|\.)api\.siliconflow\.cn$'
+  suppress_host_pattern_skip_roles:
+    - first_party_site
+  drop_rpc_fanout_flows: false
+
+windows:
+  emit_adaptive: true
+  emit_dynamic: false
+  fixed_seconds: [2, 4, 7, 10]
+
+adaptive_window:
+  min_window_s: 0.90
+  max_window_s: 12.0
+  burst_gap_s: 0.30
+  idle_gap_s: 0.75
+  tail_pad_s: 0.10
+  min_packets: 3
+  min_bytes: 900
+  min_important_bytes: 600
+  close_on_saturation: true
+  saturation_bytes: 9000
+  saturation_important_frac: 0.35
+  important_roles:
+    - unknown
+    - first_party_site
+    - third_party_backend_or_other
+    - identity_provider
+    - captcha_challenge
+    - payment_provider
+    - messaging_api
+    - form_backend
+    - cloud_api
+    - object_storage
+    - email_delivery
+    - file_storage
+    - url_shortener
+    - hosting_platform
+    - rpc_provider
+    - walletconnect
+  nuisance_roles:
+    - wallet_vendor
+    - analytics_ads
+    - third_party_static
+    - software_update
+
+features:
+  burst_gap_s: 0.05
+  active_bin_s: 0.5
+  large_packet_threshold: 1000
+  small_packet_threshold: 80
+  phases:
+    - [0, 1]
+    - [1, 2]
+    - [2, 4]
+    - [4, 7]
+    - [7, 12]
+  roles:
+    - first_party_site
+    - hosting_platform
+    - identity_provider
+    - captcha_challenge
+    - payment_provider
+    - messaging_api
+    - form_backend
+    - cloud_api
+    - object_storage
+    - email_delivery
+    - file_storage
+    - url_shortener
+    - rpc_provider
+    - wallet_vendor
+    - walletconnect
+    - third_party_static
+    - third_party_backend_or_other
+    - analytics_ads
+    - software_update
+    - unknown
+
+model:
+  second_layer:
+    model: gbdt_ensemble
+    threshold_fpr: 0.03
+    hidden_dims: [128, 64]
+    dropout: 0.20
+    epochs: 80
+    patience: 12
+    learning_rate: 0.001
+    weight_decay: 0.0001
+    validation_fraction: 0.25
+    random_state: 42

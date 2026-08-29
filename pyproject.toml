@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kitscope"
+version = "0.1.0"
+description = "KitScope"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = [
+  "numpy>=1.23",
+  "pandas>=1.5",
+  "PyYAML>=6.0",
+  "scikit-learn>=1.2",
+  "joblib>=1.2",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+reproduce = [
+  "lightgbm>=4.0",
+  "matplotlib>=3.7",
+  "pyarrow>=12.0",
+  "scipy>=1.10",
+  "torch>=2.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

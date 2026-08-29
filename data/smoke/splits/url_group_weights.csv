@@ -1,0 +1,11 @@
+capture_id,label,source,url_group_stage,url_group_id,url_group_source,url_group_weight_raw
+p1,phishing,synthetic,evaluation,url:p1,source_url_hash,1.0
+p2,phishing,synthetic,evaluation,url:p2,source_url_hash,1.0
+p3,phishing,synthetic,evaluation,url:p3,source_url_hash,1.0
+p4,phishing,synthetic,evaluation,url:p4,source_url_hash,1.0
+p5,phishing,synthetic,evaluation,url:p5,source_url_hash,1.0
+b1,benign,synthetic,evaluation,url:b12,source_url_hash,0.5
+b2,benign,synthetic,evaluation,url:b12,source_url_hash,0.5
+b3,benign,synthetic,evaluation,url:b3,source_url_hash,1.0
+b4,benign,synthetic,evaluation,url:b4,source_url_hash,1.0
+b5,benign,synthetic,evaluation,url:b5,source_url_hash,1.0

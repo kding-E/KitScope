@@ -1,0 +1,100 @@
+anchor:
+  keys:
+    - t_wallet_connect_click
+    - t_walletconnect_connect_click
+    - t_connect_click
+    - t_metamask_connect_click
+  primary_session_key: t_metamask_connect_click
+  event_fallback_key: t_metamask_connect_click
+  allow_network_fallback: true
+
+filtering:
+  # har: use browser.har serverIPAddress -> host -> role mapping.
+  # sni: ignore HAR entirely and use only TLS ClientHello SNI observed in PCAP.
+  # sni_dns: SNI first, then passive DNS answers observed in PCAP.
+  # har_then_sni: use HAR first and fall back to SNI for unmatched flows.
+  role_source: har
+  use_har_hosts: true
+  use_har_server_ips: true
+  include_unknown_packets: false
+  include_tcp: true
+  include_udp443: true
+  # This mode avoids using wallet vendor security traffic as a dominant shortcut in paper experiments.
+  feature_mode: clean   # clean | full
+
+windows:
+  emit_adaptive: true
+  fixed_seconds: [3, 6, 10, 30, 60, 90]
+  emit_dynamic: true
+
+# Dynamic endpoint for a complete candidate-anchored traffic episode.
+dynamic:
+  min_window_s: 15.0
+  max_window_s: 90.0
+  burst_gap_s: 0.35
+  idle_gap_s: 5.0
+  tail_pad_s: 0.25
+  min_burst_packets: 4
+  min_burst_bytes: 1024
+  use_capture_stop_if_no_idle: true
+
+adaptive_window:
+  min_window_s: 1.25
+  max_window_s: 14.0
+  burst_gap_s: 0.35
+  idle_gap_s: 0.90
+  tail_pad_s: 0.10
+  min_packets: 4
+  min_bytes: 1200
+  min_important_bytes: 900
+  close_on_saturation: true
+  saturation_bytes: 12000
+  saturation_important_frac: 0.40
+
+features:
+  burst_gap_s: 0.05
+  active_bin_s: 1.0
+  large_packet_threshold: 1000
+  small_packet_threshold: 80
+  phases:
+    - [0, 3]
+    - [3, 10]
+    - [10, 30]
+    - [30, 60]
+    - [60, 90]
+  roles:
+    - first_party_site
+    - hosting_platform
+    - identity_provider
+    - captcha_challenge
+    - payment_provider
+    - messaging_api
+    - file_storage
+    - rpc_provider
+    - wallet_vendor
+    - walletconnect
+    - third_party_static
+    - third_party_backend_or_other
+    - analytics_ads
+    - unknown
+
+model:
+  # Legacy prototype-attribution defaults retained for old CLI experiments.
+  first_layer:
+    min_cluster_samples: 2
+    threshold_quantile: 0.95
+    default_threshold: 4.0
+    margin_threshold: 0.10
+    variance_shrinkage: 0.10
+  # Current Layer 1 phishing detector uses these supervised binary settings.
+  second_layer:
+    model: lightgbm
+    threshold_fpr: 0.05
+    hidden_dims: [128, 64]
+    dropout: 0.20
+    epochs: 80
+    patience: 12
+    learning_rate: 0.001
+    weight_decay: 0.0001
+    validation_fraction: 0.25
+    random_state: 42
